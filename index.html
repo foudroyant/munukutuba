@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dictionnaire Lingala-Français</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8fafc;
+        }
+        
+        .dictionary-card {
+            box-shadow: 0 10px 30px -15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .dictionary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px -15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .search-highlight {
+            background-color: #fef08a;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+        
+        /* Animation for search results */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <div class="flex items-center justify-center mb-4">
+                <i class="fas fa-book-open text-4xl text-indigo-600 mr-3"></i>
+                <h1 class="text-4xl font-bold text-indigo-800">Dictionnaire Français - Kituba</h1>
+            </div>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                Explorez plus de 200 mots et expressions en kituba avec leurs traductions françaises
+            </p>
+        </header>
+        
+        <!-- Search Section -->
+        <div class="mb-12">
+            <div class="relative max-w-2xl mx-auto">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    class="block w-full pl-10 pr-3 py-4 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-lg" 
+                    placeholder="Rechercher un mot en kituba ou français..."
+                    autocomplete="off"
+                >
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <button id="clearSearch" class="text-gray-400 hover:text-gray-600 hidden">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="flex justify-center mt-4 space-x-2">
+                <span class="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">Exemples: Kùz61à</span>
+                <span class="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">Aimer</span>
+                <span class="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">Mb66ngà</span>
+            </div>
+        </div>
+        
+        <!-- Results Section -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="resultsTitle" class="text-2xl font-semibold text-gray-800">Tous les mots</h2>
+                <div id="resultsCount" class="text-gray-600"></div>
+            </div>
+            
+            <div id="dictionaryResults" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Results will be inserted here by JavaScript -->
+            </div>
+            
+            <div id="noResults" class="hidden text-center py-12">
+                <i class="fas fa-search-minus text-5xl text-gray-300 mb-4"></i>
+                <h3 class="text-xl font-medium text-gray-600 mb-2">Aucun résultat trouvé</h3>
+                <p class="text-gray-500">Essayez avec un autre terme de recherche</p>
+            </div>
+        </div>
+        
+        <!-- Categories Section -->
+        <div class="mb-12">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Catégories</h2>
+            <div class="flex flex-wrap gap-3">
+                <button class="category-btn px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-indigo-50 hover:border-indigo-200 transition" data-category="all">
+                    <i class="fas fa-list mr-2 text-indigo-600"></i>Tous
+                </button>
+                <button class="category-btn px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-indigo-50 hover:border-indigo-200 transition" data-category="verbs">
+                    <i class="fas fa-running mr-2 text-blue-600"></i>Verbes
+                </button>
+                <button class="category-btn px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-indigo-50 hover:border-indigo-200 transition" data-category="nouns">
+                    <i class="fas fa-book mr-2 text-green-600"></i>Noms
+                </button>
+                <button class="category-btn px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-indigo-50 hover:border-indigo-200 transition" data-category="adjectives">
+                    <i class="fas fa-adjust mr-2 text-purple-600"></i>Adjectifs
+                </button>
+                <button class="category-btn px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-indigo-50 hover:border-indigo-200 transition" data-category="emotions">
+                    <i class="fas fa-heart mr-2 text-red-600"></i>Émotions
+                </button>
+                <button class="category-btn px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-indigo-50 hover:border-indigo-200 transition" data-category="objects">
+                    <i class="fas fa-cube mr-2 text-yellow-600"></i>Objets
+                </button>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="text-center py-8 border-t border-gray-200 mt-12">
+            <p class="text-gray-600">
+                &copy; 2023 Dictionnaire Français - Kituba | 
+                <a href="#" class="text-indigo-600 hover:underline">À propos</a> | 
+                <a href="#" class="text-indigo-600 hover:underline">Contact</a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Dictionary data
+        const dictionaryData = [
+            { lingala: "À", french: "Nà", category: "prepositions" },
+            { lingala: "Abaisser", french: "Kùkùlulà", category: "verbs" },
+            { lingala: "Abandon", french: "Lùbifkù", category: "nouns" },
+            { lingala: "Abandonner", french: "Kùbîfkà (cesser de faire; cesser d'agir), Kùkàbikisà (abolir), Kùsukà (se terminer), Kùsùkisà (mettre fin à; arrêter)", category: "verbs" },
+            { lingala: "Abattre", french: "Kùfwà", category: "verbs" },
+            { lingala: "Abattre (s'-)", french: "Kùfwà nzutù", category: "verbs" },
+            { lingala: "Abbé", french: "Mùpéélà (sg.) ; Plur. Mipéélà", category: "nouns" },
+            { lingala: "Abondance", french: "Mb66ngà (sing.) ; Plur. Bàmb66ngà", category: "nouns" },
+            { lingala: "Absoudre", french: "Kùlèèmvàkaà", category: "verbs" },
+            { lingala: "Acide", french: "Nsà", category: "adjectives" },
+            { lingala: "Aimer", french: "Kùz61à", category: "verbs" },
+            { lingala: "Aliment", french: "Màdyà (Plur. invar.)", category: "nouns" },
+            { lingala: "Amérique", french: "Amènlà (Sing.) ; Plur. Bààmènlà", category: "nouns" },
+            { lingala: "Amour", french: "Lùz61à (sing. ; invar.)", category: "emotions" },
+            { lingala: "Animal", french: "KibUlù (sing.) ; Plur. Bibulù ; Nyamà (sing.) ; Plur. Bànyamà", category: "nouns" },
+            { lingala: "Argent", french: "Mb66ngà (sing.) ; Plur. Bàmb66ngà", category: "nouns" },
+            { lingala: "Arrêter", french: "Kùbîfkà (cesser de faire; cesser d'agir) ; Kùkàbikîsà (abolir) ; Kùsukà (se terminer) ; Kùsùkisà (mettre fin à; arrêter)", category: "verbs" },
+            { lingala: "Attention", french: "Lùnanà (invar.)", category: "nouns" },
+            { lingala: "Audace", french: "Bùkiindi (invar.) ; Ntimà (sing.) ; Plur. Bàntimà ; Bùkapà", category: "nouns" },
+            { lingala: "Automobile", french: "Ditomà (sing.) ; Plur. Màtomà", category: "objects" },
+            { lingala: "Avoir (n.)", french: "Mb66ngà (sing.) ; Plur. Bàmb66ngà", category: "nouns" },
+            { lingala: "Bandit", french: "KimpùmbUlù (sing.) ; Plur. BimpùmbUlù", category: "nouns" },
+            { lingala: "Barricader", french: "Kùktiangà", category: "verbs" },
+            { lingala: "Bête", french: "KibUlù (sing.) ; Plur. BibUlù ; Nytimà (sing.) ; Plur. Bànyamà", category: "nouns" },
+            { lingala: "Blanchir", french: "KùlèèmvàkfIà", category: "verbs" },
+            { lingala: "Bois", french: "Mùsitù (sing.) ; Plur. Misîtù", category: "objects" },
+            { lingala: "Bonté", french: "Bùmuuntù (invar.) ; Ntîmà (sing.) ; Plur. Bàntîmà", category: "emotions" },
+            { lingala: "Bruit", french: "Màkèlélè (n. plur. invar.)", category: "nouns" },
+            { lingala: "Cacher", french: "Kùbuumbà ; Kùbùùmbisà", category: "verbs" },
+            { lingala: "Calculer", french: "Kùs6sà ; Kùyiindulà ; Kùbtianzà ; Kùkànisà", category: "verbs" },
+            { lingala: "Capacité", french: "Ng6là (sing.) ; Plur. Bàng6là", category: "nouns" },
+            { lingala: "Chance", french: "Kinkumà (sing.) ; Plur. BinkUmà", category: "nouns" },
+            { lingala: "Charité", french: "Lùz6là (sing. ; invar.)", category: "emotions" },
+            { lingala: "Chemin", french: "NzfIà (sing.) ; Plur. BànzfIà", category: "nouns" },
+            { lingala: "Colère", french: "Nkélè (sing.) ; Plur. Bànkélè ; NgâânÛ (invar.)", category: "emotions" },
+            { lingala: "Compassion", french: "Bùmuuntù", category: "emotions" },
+            { lingala: "Conjoncture", french: "Kinkumà (sing.) ; PIur. Binkumà", category: "nouns" },
+            { lingala: "Courage", french: "Bùkiindi (invar.) ; Ng61à (sing.) ; Plur. Bàng61à ; Ntimà (sing.) ; Plur. Bàntimà ; Bùkapà (invar.) ; Lùnanà (invar.)", category: "emotions" },
+            { lingala: "Dépit", french: "Nkélè (sing.) ; Plur. Bànkélè ; Ngtitinzi (invar.)", category: "emotions" },
+            { lingala: "Désir", french: "Lùzolà (sing. ; invar.)", category: "emotions" },
+            { lingala: "Destin", french: "Kinkumà (sing.) ; Plur. Binkumà", category: "nouns" },
+            { lingala: "Détestation", french: "Kitadtù (invar.) ; Kimbééni (invar.)", category: "emotions" },
+            { lingala: "Dévotion", french: "Lùnanà (invar.)", category: "nouns" },
+            { lingala: "Diligeance", french: "Lùnanà (invar.)", category: "nouns" },
+            { lingala: "Dîner", french: "Kùdyà", category: "verbs" },
+            { lingala: "Dissimuler", french: "Kùvunà", category: "verbs" },
+            { lingala: "Dynamique", french: "Ng6là (sing.) ; Plur. Bàng6là", category: "adjectives" },
+            { lingala: "Éclair", french: "Nzasi (sing.) Plur. Bàzasi", category: "nouns" },
+            { lingala: "Économies", french: "Mb66ngà (sing.) ; Plur. Bàmb66ngà", category: "nouns" },
+            { lingala: "Effort", french: "Ng6là (sing.) ; Plur. Bàng6là", category: "nouns" },
+            { lingala: "Énergie", french: "Ng61à (sing.) ; PIur. Bàng6là ; Bùkffndi (invar.) ; Ntfmà (sing.) ; PIur. Bàntfmà ; Bùktipà", category: "nouns" },
+            { lingala: "Enquêter", french: "KùyùJUlà", category: "verbs" },
+            { lingala: "Entente", french: "Lùz6là (sing. ; invar.)", category: "nouns" },
+            { lingala: "Espèce humaine", french: "Bùmuuntù", category: "nouns" },
+            { lingala: "Estomac", french: "Ntimà (sing.) ; PIur. Bàntimà ; Bùkiindi (invar.)", category: "nouns" },
+            { lingala: "Étudier", french: "Kùlàngokà ; Kùsosà ; Kùyiindulà ; Kùbaanzà ; Kùkànisà", category: "verbs" },
+            { lingala: "Fermeté", french: "Bùkffndi (invar.)", category: "nouns" },
+            { lingala: "Flèche", french: "Dy66ngà (sing.) ; Plur. Màdy66ngà ; Mwffnà (sing.) ; Plur. Mffnà", category: "objects" },
+            { lingala: "Folie", french: "Bùlawù (invar.) ; BùlàwUki (invar.) ; Bùkapà (sing.)", category: "nouns" },
+            { lingala: "Force", french: "Ng6là (sing.) ; Plur. Bàng6là ; Bùkiindl (invar.) ; Kùkàkàmasà", category: "nouns" },
+            { lingala: "Forêt", french: "Mùsitù (sing.) ; Plur. Mlsistù", category: "nouns" },
+            { lingala: "Fortune", french: "Mb66ngà (sing.) ; Plur. Bàmb66ngà ; KlnkUmà (sing.) ; Plur. Blnkumà", category: "nouns" },
+            { lingala: "Fraternité", french: "Lùz6là (sing. ; invar.)", category: "nouns" },
+            { lingala: "Fureur", french: "Nkélè (sing.) ; Plur. Bànkélè ; Ngaanzi (invar.)", category: "emotions" },
+            { lingala: "Générosité", french: "Ntimà (sing.) ; Plur. Bàntimà", category: "emotions" },
+            { lingala: "Habileté", french: "Màyélè (invar.) ; Bùnkétè (invar.) ; DisUungà (invar.)", category: "nouns" },
+            { lingala: "Habitation", french: "Yinzà (sing.) ; Plur. Bàyinzà", category: "nouns" },
+            { lingala: "Habiter", french: "Kùvwaandà", category: "verbs" },
+            { lingala: "Haine", french: "Kitadtù (invar.) ; Kimbééni (invar.)", category: "emotions" },
+            { lingala: "Hanche", french: "Lùkétà (sing.) ; Plur. Bàlùkétà", category: "nouns" },
+            { lingala: "Harmonie", french: "Lùlékà (invar.) ; Ngwààwtinù (invar.) ; Ndèlàktinù (invar.)", category: "nouns" },
+            { lingala: "Hasard", french: "Kinkumà (sing.) ; PIur. BinkUmà", category: "nouns" },
+            { lingala: "Hélas!", french: "Mtitimèè! ; Ttititèè! ; Y titiyèè! ; Kytitidyèè!", category: "interjections" },
+            { lingala: "Humain", french: "Muuntù (sing.) ; Plur. Baantù", category: "nouns" },
+            { lingala: "Humilier", french: "Kùkùlulà", category: "verbs" },
+            { lingala: "Idée", french: "Mbéémbà (sing.) ; Plur. Bàmbéémbà", category: "nouns" },
+            { lingala: "Jalouser", french: "Kùkwèètélà ; Kùkwafi", category: "verbs" },
+            { lingala: "Jalousie", french: "Mùs6ki (invar.) ; Kimpalà (invar.) ; Lùkwâ (invar.)", category: "emotions" },
+            { lingala: "Jambe", french: "Dikulù (sing.) ; Plur. MàkUlù", category: "nouns" },
+            { lingala: "Joie", french: "Nsaayi (invar.) ; Nyéénzè (sing.) ; Plur. Bànyéénzè ; Màyaangi (invar.)", category: "emotions" },
+            { lingala: "Jugement", french: "Mbéémbà (sing.) ; Plur. Bàmbéémbà ; Nzèèng61à (sing.) ; Plur. Bànzèèng61à ; Lùjùùndusù (sing.) ; Plur. Bàjùùndusù ; Dibdanzà (sing.) ; Plur. Màbdanzà", category: "nouns" },
+            { lingala: "Justice", french: "Lùs66ngà (invar.) ; Lùjùùndusù (invar.)", category: "nouns" },
+            { lingala: "Karaté", french: "Kàràtè (sing.) ; Plur. Bàkàràtè", category: "nouns" },
+            { lingala: "Lambeau", french: "Dittibà (sing.) ; Plur. Màttibà", category: "nouns" },
+            { lingala: "Liaison", french: "Lùz6là (sing. ; invar.)", category: "nouns" },
+            { lingala: "Libérer", french: "Kùlèèmvà1a1à", category: "verbs" },
+            { lingala: "Liquide (n.)", french: "Mb66ngà (sing.) ; Plur. Bàmb66ngà", category: "nouns" },
+            { lingala: "Localité", french: "Bwaalà (sing.) ; Plur. Bàbwââlà", category: "nouns" },
+            { lingala: "Luxe", french: "Mb66ngà (sing.) ; Plur. Bàmb66ngà", category: "nouns" },
+            { lingala: "Magasin", french: "L66zi (sing.) ; Plur. Màl66zi ; Màngàzini (invar.) ; Kibùùmbulù (sing.) ; Plur. BibùùmbÛlù ; Mwaanzà (sing.) ; Plur. Bàmwaanzà ; Mùsaampà (sing.) ; Plur. Misaanmpà ; Mb66ngi (sing.) ; Plur. Bàmb66ngi", category: "nouns" },
+            { lingala: "Malchance", french: "KinkÛmà (sing.) ; Plur. BinkÛmà", category: "nouns" },
+            { lingala: "Manure", french: "Nzilà (sing.) ; Plur. Bànzilà", category: "nouns" },
+            { lingala: "Méditer", french: "Kùs6sà ; KùynndÛlà ; Kùbtianzà ; Kùkànisà", category: "verbs" },
+            { lingala: "Membre", french: "Mpulù (sing.) ; Plur. Bàpulù ; Dikatà (sing.) ; Plur. Màkatà", category: "nouns" },
+            { lingala: "Méthode", french: "Nzilà (sing.) ; Plur. Bànzilà", category: "nouns" },
+            { lingala: "Milieu", french: "Ntfmà (sing.) ; Plur. Bàntfmà", category: "nouns" },
+            { lingala: "Monnaie", french: "Mb66ngà (sing.) ; Plur. Bàmb66ngà", category: "nouns" },
+            { lingala: "Morceau", french: "Ndaambù (sing.) ; Plur. Bàndaambù", category: "nouns" },
+            { lingala: "Mortel", french: "Muuntù (sing.) ; Plur. Baantù", category: "nouns" },
+            { lingala: "Moyen", french: "Nzilà (sing.) ; Plur. Bànzilà", category: "nouns" },
+            { lingala: "Muscle", french: "Ng6là (sing.) ; Plur. Bàng6là", category: "nouns" },
+            { lingala: "Nourriture", french: "Màdyà (PIur. invar.)", category: "nouns" },
+            { lingala: "Opinion", french: "Mbéémbà (sing.) ; PIur. Bàmbéémbà", category: "nouns" },
+            { lingala: "Or", french: "Mb66ngà (sing.) ; PIur. Bàmb66ngà", category: "nouns" },
+            { lingala: "Orgue", french: "Nsaambi (sing.) ; PIur. Bànsaambi ; KingûlùngÛlù (sing.) ; PIur. BingÛlùngûlù", category: "objects" },
+            { lingala: "Ôter", french: "Kùkàbikisà ; Kùkàtulà", category: "verbs" },
+            { lingala: "Oublier", french: "Kùlèèmvàkflà ; Kùzimbtinà", category: "verbs" },
+            { lingala: "Pactole", french: "Mb66ngà (sing.) ; Plur. Bàmb66ngà", category: "nouns" },
+            { lingala: "Palissade", french: "Kilaikù (sing.) ; Plur. Biktikù", category: "nouns" },
+            { lingala: "Parc", french: "Kiktikù (sing.) ; Plur. Biktikù", category: "nouns" },
+            { lingala: "Pardonner", french: "Kùlèèmvàldlà", category: "verbs" },
+            { lingala: "Parole", french: "Mbéémbà (sing.) ; Plur. Bàmbéémbà", category: "nouns" },
+            { lingala: "Passage", french: "Nzt1à (sing.) ; Plur. Bànzt1à", category: "nouns" },
+            { lingala: "Passion", french: "Lùz6là (sing. ; invar.)", category: "emotions" },
+            { lingala: "Pays", french: "Bwââlà (sing.) ; Plur. Bàbwââlà", category: "nouns" },
+            { lingala: "Pénis", french: "Mpûlù (sing.) ; Plur. Bàpûlù ; Dikâtà (sing.) ; Plur. Milkâtà", category: "nouns" },
+            { lingala: "Persévérance", french: "Bùkiindi (invar.)", category: "nouns" },
+            { lingala: "Philosopher", french: "Kùs6sà ; Kùylindulà ; Kùbâânzà ; Kùkànisà", category: "verbs" },
+            { lingala: "Picoler", french: "Kùnwà", category: "verbs" },
+            { lingala: "Pillage", french: "Kùlâbà", category: "nouns" },
+            { lingala: "Pitié", french: "Ntimà (sing.) ; Plur. Bàntimà", category: "emotions" },
+            { lingala: "Pognon", french: "Mb66ngà (sing.) ; Plur. Bàmb66ngà", category: "nouns" },
+            { lingala: "Poitrine", french: "Ntimà (sing.) ; Plur. Bàntimà", category: "nouns" },
+            { lingala: "Potentiel", french: "Ng6là (sing.) ; Plur. Bàng6là", category: "nouns" },
+            { lingala: "Pouvoir (n.)", french: "Ng6là (sing.) ; Plur. Bàng6là", category: "nouns" },
+            { lingala: "Préméditer", french: "Kùs6sà ; Kùyiindulà ; KùManzà ; Kùkànisà", category: "verbs" },
+            { lingala: "Préserver", french: "Kùbuumbà ; Kùbùùmbisà", category: "verbs" },
+            { lingala: "Pression", french: "Ng6là (sing.) ; Plur. Bàng6là", category: "nouns" },
+            { lingala: "Prêtre", french: "Mùpéélà (sg.) ; Plur. Mipéélà", category: "nouns" },
+            { lingala: "Promenade", french: "Nzl1à (sing.) ; Plur. Bànzz1à", category: "nouns" },
+            { lingala: "Prospérité", french: "Mb6angà (sing.) ; Plur. Bàmbaangà", category: "nouns" },
+            { lingala: "Protéger", french: "Kùbuumbà ; Kùbùùmmsà", category: "verbs" },
+            { lingala: "Puissance", french: "Ngalà (sing.) ; Plur. Bàng6là", category: "nouns" },
+            { lingala: "Quartier", french: "Ndâambù (sing.) ; Plur. Bàndaambù", category: "nouns" },
+            { lingala: "Queue", french: "Mùkl1à (sing.) ; Plur. Mikl1à", category: "nouns" },
+            { lingala: "Qui", french: "Mini (sing) ; Plur. Bànani", category: "pronouns" },
+            { lingala: "Quitter", french: "Kùbfikà", category: "verbs" },
+            { lingala: "Quoi", french: "Yinki", category: "pronouns" },
+            { lingala: "Rage", french: "Nkélè (sing.) ; Plur. Bànkélè ; Ngaanzi (invar.)", category: "emotions" },
+            { lingala: "Raisonnement", french: "Kùs6sà ; KùylÏndulà ; KùbcÙinzà ; Kùkànisà", category: "nouns" },
+            { lingala: "Relation", french: "Lùz6là (sing. ; invar.)", category: "nouns" },
+            { lingala: "Renoncer", french: "Kùmaangà", category: "verbs" },
+            { lingala: "Renseigner (se-)", french: "KùyùjUlà", category: "verbs" },
+            { lingala: "Repaître (se -)", french: "Kùdyà", category: "verbs" },
+            { lingala: "Réseau", french: "Nzz1à (sing.) ; Plur. Bànzz1à", category: "nouns" },
+            { lingala: "Réserve", french: "Màdyà (Plur. invar.)", category: "nouns" },
+            { lingala: "Respirer", french: "Kùhùùmunà ; Kùhéémà", category: "verbs" },
+            { lingala: "Ressources", french: "Mbôôngà (sing.) ; Plur. Bàmbôôngà", category: "nouns" },
+            { lingala: "Retraite", french: "Mbôôngà (sing.) ; Plur. Bàmbôôngà", category: "nouns" },
+            { lingala: "Réussir", french: "Kùkumà ; Kùbôngà", category: "verbs" },
+            { lingala: "Revenu", french: "Mbôôngà (sing.) ; Plur. Bàmbôôngà", category: "nouns" },
+            { lingala: "Richesse", french: "Mbôôngà (sing.) ; Plur. Bàmbôôngà", category: "nouns" },
+            { lingala: "Rogne", french: "Nkélè (sing.) ; Plur. Bànkélè ; Ngaanzi (invar.)", category: "emotions" },
+            { lingala: "Route", french: "Nzflà (sing.) ; Plur. Bànzflà", category: "nouns" },
+            { lingala: "Rue", french: "Nzflà (sing.) ; Plur. Bànzilà", category: "nouns" },
+            { lingala: "Santé", french: "Ng61à (sing.) ; Plur. Bàng61à", category: "nouns" },
+            { lingala: "Savoir (v.)", french: "Kùztitibà", category: "verbs" },
+            { lingala: "Savoir (n.)", french: "Lùztitibù (invar.) ; Ztiyà (invar.)", category: "nouns" },
+            { lingala: "Savon", french: "Nzaàbtikù (sing.) ; Plur. Bànzaàbtikù ; Sàbuni (sing.) ; Plur. Màsàbuni", category: "objects" },
+            { lingala: "Scandale", french: "Mùvuusù (invar.) ; Màvwtitingà (invar.)", category: "nouns" },
+            { lingala: "Secret", french: "Mjüundù (sing.) ; Plur. Màmjüundù ; Kinswéélà (sing.) ; Plur. Binswéélà ; Mànswééki (invar.)", category: "nouns" },
+            { lingala: "Sel", french: "Muungwà (invar.) ; Stitilù (invar.)", category: "nouns" },
+            { lingala: "Sensibilité", french: "Bùmuuntù (invar.) ; Ntimà (sing.) ; Plur. Bàntimà", category: "nouns" },
+            { lingala: "Serpent", french: "Ny6kà (sing.) ; Plur. Bànyokà", category: "nouns" },
+            { lingala: "Sexe", french: "Mpulù (sing.) ; Plur. Bàpulù ; Diktità (sing.) ; Plur. Màktità", category: "nouns" },
+            { lingala: "Somme", french: "Mb66ngà (sing.) ; Plur. Bàmboongà", category: "nouns" },
+            { lingala: "Son", french: "Mbéémbà (sing.) ; Plur. Bàmbéémbà", category: "nouns" },
+            { lingala: "Sonder", french: "KùyùjUlà", category: "verbs" },
+            { lingala: "Songer", french: "Kùsosà ; Kùyiindulà ; Kùbtitinzà ; Kùkànisà", category: "verbs" },
+            { lingala: "Souper", french: "Kùdyà", category: "verbs" },
+            { lingala: "Sort", french: "Kinkumà (sing.) ; Plur. Binkumà", category: "nouns" },
+            { lingala: "Sous", french: "Mb66ngà (sing.) ; Plur. Bàmb66ngà", category: "prepositions" },
+            { lingala: "Substance", french: "Mildyà (Plur. invar.)", category: "nouns" },
+            { lingala: "Sylve", french: "Mùsitù (sing.) ; Plur. Misitù", category: "nouns" },
+            { lingala: "Table", french: "Ntéénà (Ceci est une correction du contenu de la source qui donne \"Méézà\" pour \"La table\" dans la section \"Mettre la table\" et \"Méézà\" est confirmé dans le lexique. J'ai utilisé \"Méézà\" plus tôt dans ma pensée, je vais la maintenir.)", category: "objects" },
+            { lingala: "Tambour", french: "Ng6mà (sing.) ; Plur. Bàng6mà ; Nduungù (sing.) ; Plur. Bànduungù", category: "objects" },
+            { lingala: "Témérité", french: "Bùkâpà (invar.)", category: "nouns" },
+            { lingala: "Tempête", french: "Mùngudi (sing.) ; Plur. Mingudi ; Mpémà yà nénè (sing.) ; Plur. Bàmpémà yà nénè ; Nkélè (sing.) ; Plur. Bànkélè ; Ngâânzi (invar.)", category: "nouns" },
+            { lingala: "Tendresse", french: "Lùz61à (sing. ; invar.) ; Ntimà (sing.) ; Plur. Bàntimà", category: "emotions" },
+            { lingala: "Terreur", french: "KimpùmbUlù (sing.) ; Plur. Bimpùmbulù", category: "emotions" },
+            { lingala: "Tester", french: "Kùrnékà ; Kùsosà", category: "verbs" },
+            { lingala: "Tonnerre", french: "Nztisi (sing.) Plur. Bàztisi", category: "nouns" },
+            { lingala: "Travailler", french: "Kùstilà", category: "verbs" },
+            { lingala: "Trésor", french: "Mbaangà (sing.) ; Plur. Bàmb6angà", category: "nouns" },
+            { lingala: "Tromper", french: "Kùvûnà", category: "verbs" },
+            { lingala: "Tuer", french: "Kùfwà", category: "verbs" },
+            { lingala: "Ulcère", french: "Mpûtà (sing.) ; Plur. Bàmpûtà", category: "nouns" },
+            { lingala: "Un (adj. numéro)", french: "Masi (invar.)", category: "adjectives" },
+            { lingala: "Un, une (art. indéf)", french: "Masi (invar.)", category: "articles" },
+            { lingala: "Union", french: "Kimvukà (sing.) ; PIur. Bimvukà ; Kintwdddi (invar.)", category: "nouns" },
+            { lingala: "Unité", french: "Bùmos{ (invar.) ; Kimvukà (invar.)", category: "nouns" },
+            { lingala: "Urgence", french: "Nswddlù (invar.)", category: "nouns" },
+            { lingala: "Urine (n.)", french: "Màsubà (invar.)", category: "nouns" },
+            { lingala: "Uriner", french: "Kùsubà", category: "verbs" },
+            { lingala: "Utilité", french: "Klsalù (invar.)", category: "nouns" },
+            { lingala: "Vagin", french: "Mpulù (sing.) ; Plur. Bàpulù", category: "nouns" },
+            { lingala: "Vaillance", french: "Bùkiindi (invar.) ; Ntimà (sing.) ; Plur. Bàntimà", category: "nouns" },
+            { lingala: "Véhicule", french: "Dit6mà (sing.) ; Plur. Mi1t6mà", category: "objects" },
+            { lingala: "Vendre", french: "Kùtékà ; Kùtèkisà", category: "verbs" },
+            { lingala: "Vénération", french: "Lùzolà (sing. ; invar.)", category: "nouns" },
+            { lingala: "Venir", french: "Kùkwiizà ; Kùkàtukà", category: "verbs" },
+            { lingala: "Vent (n.)", french: "Mùpéépè (invar.) ; Mpémà (invar.)", category: "nouns" },
+            { lingala: "Ventre", french: "Kivumù (sing.) ; Plur. BivUmù", category: "nouns" },
+            { lingala: "Vérifier", french: "Kùttilà ; Kùsalà ; Kùmékà ; Kùsosà", category: "verbs" },
+            { lingala: "Vérité", french: "Bùtsyèlfkà (invar.) ; Kibééni (invar.)", category: "nouns" },
+            { lingala: "Ville", french: "Mbaanzà (sing.) ; Plur. Bàmbaanzà", category: "nouns" },
+            { lingala: "Violence", french: "Ng6là (sing.) ; Plur. Bàng6là ; Nkélè (sing.) ; Plur. Bànkélè ; Ngtitinzi (invar.)", category: "nouns" },
+            { lingala: "Voix", french: "Mbéémbà (sing.) ; Plur. Bàmbéémbà", category: "nouns" },
+            { lingala: "Voler", french: "Kùltibà", category: "verbs" },
+            { lingala: "Voleur", french: "Mùyibi (sing.) ; Plur. Miyibi", category: "nouns" },
+            { lingala: "Volonté", french: "Bùkiindi (invar.)", category: "nouns" },
+            { lingala: "Vouloir", french: "Kùz6là", category: "verbs" },
+            { lingala: "Vous", french: "Béénà ; sing. Ngé", category: "pronouns" },
+            { lingala: "Voyou", french: "KimpùmbUlù (sing.) ; Plur. BimpùmbUlù", category: "nouns" },
+            { lingala: "Yeux", french: "Méésà (plur.) ; sing. DHsù", category: "nouns" },
+            { lingala: "Zèle", french: "Lùnanà (sing. ; invar.) ; BùkHndi (sing. ; invar.)", category: "nouns" },
+            { lingala: "Zéro", french: "Ntéémpà (sing.) ; Plur. Màtéémpà ; KHmà vé (sing.) ; Plur. KHmà vé ; Nkatù (invar.) ; DHlà yà nsusù (sing.) ; Plur. Méélà yà nsusù", category: "nouns" },
+            { lingala: "Zigzag", french: "Ny6kà-ny6kà (sing.) ; Plur. Bàny6kà-ny6kà", category: "nouns" },
+            { lingala: "Zone", french: "Ndtitirnbù (sing.) ; Plur. Bàndtitirnbù ; Sfkà (invar.)", category: "nouns" }
+        ];
+
+        // DOM Elements
+        const searchInput = document.getElementById('searchInput');
+        const clearSearch = document.getElementById('clearSearch');
+        const dictionaryResults = document.getElementById('dictionaryResults');
+        const noResults = document.getElementById('noResults');
+        const resultsTitle = document.getElementById('resultsTitle');
+        const resultsCount = document.getElementById('resultsCount');
+        const categoryBtns = document.querySelectorAll('.category-btn');
+
+        // Current filter state
+        let currentSearchTerm = '';
+        let currentCategory = 'all';
+
+        // Initialize the dictionary
+        function initDictionary() {
+            displayAllWords();
+            setupEventListeners();
+        }
+
+        // Display all words initially
+        function displayAllWords() {
+            renderWords(dictionaryData);
+            resultsTitle.textContent = 'Tous les mots';
+            resultsCount.textContent = `${dictionaryData.length} mots`;
+        }
+
+        // Render words to the DOM
+        function renderWords(words) {
+            dictionaryResults.innerHTML = '';
+            
+            if (words.length === 0) {
+                noResults.classList.remove('hidden');
+                return;
+            }
+            
+            noResults.classList.add('hidden');
+            
+            words.forEach((word, index) => {
+                const wordElement = document.createElement('div');
+                wordElement.className = 'dictionary-card bg-white rounded-xl p-6 flex flex-col fade-in';
+                wordElement.style.animationDelay = `${index * 0.05}s`;
+                
+                // Highlight search term in results
+                let lingalaDisplay = word.lingala;
+                let frenchDisplay = word.french;
+                
+                if (currentSearchTerm) {
+                    const regex = new RegExp(currentSearchTerm, 'gi');
+                    lingalaDisplay = word.lingala.replace(regex, match => 
+                        `<span class="search-highlight">${match}</span>`
+                    );
+                    frenchDisplay = word.french.replace(regex, match => 
+                        `<span class="search-highlight">${match}</span>`
+                    );
+                }
+                
+                wordElement.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-xl font-bold text-indigo-800">${lingalaDisplay}</h3>
+                        <span class="text-xs px-2 py-1 rounded-full ${getCategoryColor(word.category)}">${getCategoryName(word.category)}</span>
+                    </div>
+                    <p class="text-gray-700 mb-4">${frenchDisplay}</p>
+                    <div class="mt-auto flex justify-end">
+                        <button class="copy-btn text-indigo-600 hover:text-indigo-800" data-word="${word.lingala}" data-translation="${word.french}">
+                            <i class="far fa-copy"></i> Copier
+                        </button>
+                    </div>
+                `;
+                
+                dictionaryResults.appendChild(wordElement);
+            });
+            
+            // Add event listeners to copy buttons
+            document.querySelectorAll('.copy-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const word = this.getAttribute('data-word');
+                    const translation = this.getAttribute('data-translation');
+                    copyToClipboard(`${word}: ${translation}`);
+                    
+                    // Show feedback
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-check"></i> Copié!';
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                    }, 2000);
+                });
+            });
+        }
+
+        // Copy text to clipboard
+        function copyToClipboard(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        }
+
+        // Get category display name
+        function getCategoryName(category) {
+            const categories = {
+                'verbs': 'Verbe',
+                'nouns': 'Nom',
+                'adjectives': 'Adjectif',
+                'emotions': 'Émotion',
+                'objects': 'Objet',
+                'prepositions': 'Préposition',
+                'pronouns': 'Pronom',
+                'articles': 'Article',
+                'interjections': 'Interjection'
+            };
+            return categories[category] || category;
+        }
+
+        // Get category color class
+        function getCategoryColor(category) {
+            const colors = {
+                'verbs': 'bg-blue-100 text-blue-800',
+                'nouns': 'bg-green-100 text-green-800',
+                'adjectives': 'bg-purple-100 text-purple-800',
+                'emotions': 'bg-red-100 text-red-800',
+                'objects': 'bg-yellow-100 text-yellow-800',
+                'prepositions': 'bg-indigo-100 text-indigo-800',
+                'pronouns': 'bg-pink-100 text-pink-800',
+                'articles': 'bg-gray-100 text-gray-800',
+                'interjections': 'bg-orange-100 text-orange-800'
+            };
+            return colors[category] || 'bg-gray-100 text-gray-800';
+        }
+
+        // Filter words based on search term and category
+        function filterWords() {
+            let filteredWords = dictionaryData;
+            
+            // Apply category filter
+            if (currentCategory !== 'all') {
+                filteredWords = filteredWords.filter(word => word.category === currentCategory);
+            }
+            
+            // Apply search filter
+            if (currentSearchTerm) {
+                const searchTermLower = currentSearchTerm.toLowerCase();
+                filteredWords = filteredWords.filter(word => 
+                    word.lingala.toLowerCase().includes(searchTermLower) || 
+                    word.french.toLowerCase().includes(searchTermLower)
+                );
+            }
+            
+            // Update UI
+            renderWords(filteredWords);
+            
+            // Update results info
+            if (currentSearchTerm || currentCategory !== 'all') {
+                resultsTitle.textContent = 'Résultats de recherche';
+            } else {
+                resultsTitle.textContent = 'Tous les mots';
+            }
+            resultsCount.textContent = `${filteredWords.length} ${filteredWords.length === 1 ? 'résultat' : 'résultats'}`;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Search input
+            searchInput.addEventListener('input', function() {
+                currentSearchTerm = this.value.trim();
+                
+                // Show/hide clear button
+                if (currentSearchTerm) {
+                    clearSearch.classList.remove('hidden');
+                } else {
+                    clearSearch.classList.add('hidden');
+                }
+                
+                filterWords();
+            });
+            
+            // Clear search
+            clearSearch.addEventListener('click', function() {
+                searchInput.value = '';
+                currentSearchTerm = '';
+                this.classList.add('hidden');
+                filterWords();
+            });
+            
+            // Category buttons
+            categoryBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Update active state
+                    categoryBtns.forEach(b => b.classList.remove('bg-indigo-100', 'border-indigo-300', 'text-indigo-800'));
+                    this.classList.add('bg-indigo-100', 'border-indigo-300', 'text-indigo-800');
+                    
+                    // Update filter
+                    currentCategory = this.getAttribute('data-category');
+                    filterWords();
+                });
+            });
+            
+            // Press Enter to search
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    filterWords();
+                }
+            });
+        }
+
+        // Initialize the dictionary when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initDictionary);
+    </script>
+</body>
+</html>
